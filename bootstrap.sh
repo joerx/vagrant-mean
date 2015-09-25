@@ -1,3 +1,13 @@
+export DEBIAN_FRONTEND=noninteractive
+export DISTRO=$(lsb_release -c -s)
+
+# setup locate properly
+if ! cat /etc/default/locale | grep LC_ALL > /dev/null; then
+  printf 'LANG="en_US.UTF-8"\nLC_ALL="en_US.UTF-8"\nLC_CTYPE="en_US.UTF-8"\nLANGUAGE="en_US.UTF-8"' > /etc/default/locale
+  . /etc/default/locale
+  dpkg-reconfigure locales
+fi
+
 # Update package index, apply pending upgrades
 apt-get update
 apt-get -y dist-upgrade
@@ -8,15 +18,22 @@ if [ ! -f /usr/bin/git ]; then
   apt-get install -y git
 fi
 
-# Install Node.js
-if [ ! -f /usr/bin/node ]; then
-  curl -sL https://deb.nodesource.com/setup | sudo bash -
-  apt-get install -y nodejs
+# Curl
+if [ ! -f /usr/bin/curl ]; then
+  apt-get install curl
 fi
 
-# Install grunt-cli
-if [ ! -f /usr/bin/grunt ]; then
-  npm install -g grunt-cli
+# Build essential
+if [ ! -f /usr/bin/g++ ]; then
+  apt-get install -y build-essential
+fi
+
+# Install Node.js
+if [ ! -f /usr/bin/node ]; then
+  curl -s https://deb.nodesource.com/gpgkey/nodesource.gpg.key | apt-key add -
+  echo "deb http://deb.nodesource.com/node_4.x ${DISTRO} main" > /etc/apt/sources.list.d/nodesource.list
+  echo "deb-src http://deb.nodesource.com/node_4.x ${DISTRO} main" >> /etc/apt/sources.list.d/nodesource.list
+  apt-get update && apt-get install -y nodejs
 fi
 
 # Install MongoDB
